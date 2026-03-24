@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Zap } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { ChatWidget } from "@/components/chat/ChatWidget";
@@ -42,7 +44,22 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <PlanProvider value={{ plan, isDemo }}>
-      <div className="flex h-screen overflow-hidden bg-surface-700">
+      {isDemo && (
+        <div className="fixed top-0 inset-x-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 bg-primary-500 text-zinc-900 text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <Zap className="w-3.5 h-3.5 shrink-0" />
+            <span>Você está no modo demonstração do Deppio</span>
+          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 bg-zinc-900/15 hover:bg-zinc-900/25 transition-colors px-3 py-1 rounded-full whitespace-nowrap"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            Voltar ao site
+          </Link>
+        </div>
+      )}
+      <div className={`flex h-screen overflow-hidden bg-surface-700 ${isDemo ? "pt-8" : ""}`}>
         {/* Overlay mobile */}
         {mobileSidebarOpen && (
           <div
