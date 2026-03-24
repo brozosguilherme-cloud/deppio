@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, Crown, ChevronLeft, Zap, Eye, EyeOff, CheckCircle, ArrowRight } from "lucide-react";
@@ -296,7 +296,7 @@ function StepSuccess({ name, plan }: { name: string; plan: Plan }) {
 
 const STEPS = ["Plano", "Empresa", "Acesso", "Pronto"];
 
-export default function CadastroPage() {
+function CadastroContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
@@ -436,5 +436,13 @@ export default function CadastroPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <CadastroContent />
+    </Suspense>
   );
 }
