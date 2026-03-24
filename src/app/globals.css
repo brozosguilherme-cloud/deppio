@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-surface-200;
+  }
+  body {
+    @apply bg-surface-700 text-white antialiased;
+  }
+}
+
+/* Scrollbar escura e minimalista */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-surface-100;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface-50;
+}
+
+/* Seleção de texto com cor dourada */
+::selection {
+  background-color: rgba(245, 197, 24, 0.25);
+  color: #fff;
+}

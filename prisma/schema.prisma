@@ -1,0 +1,411 @@
+// Schema Prisma para SaaS de Gestão de Estoque
+// Cada organização é um tenant isolado via Row Level Security no Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────
+// TENANT / ORGANIZAÇÃO
+// ─────────────────────────────────────────────────
+
+model Organization {
+  id                   String   @id @default(cuid())
+  name                 String
+  cnpj                 String?  @unique
+  phone                String?
+  email                String?
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  website              String?
+  logoUrl              String?
+  businessType         String?  // varejo, atacado, industria, servicos, outro
+  description          String?
+  onboardingCompleted  Boolean  @default(false)
+  plan                 String   @default("ESSENCIAL") // ESSENCIAL | PRO
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  users                User[]
+  categories           Category[]
+  suppliers            Supplier[]
+  products             Product[]
+  stockLocations       StockLocation[]
+  stockMovements       StockMovement[]
+  sales                Sale[]
+  customers            Customer[]
+  purchaseOrders       PurchaseOrder[]
+  rawMaterials         RawMaterial[]
+  rawMaterialMovements RawMaterialMovement[]
+
+  @@map("organizations")
+}
+
+// ─────────────────────────────────────────────────
+// USUÁRIO
+// ─────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN    // acesso total
+  OPERATOR // pode criar/editar, não pode excluir ou ver relatórios financeiros
+  VIEWER   // somente leitura
+}
+
+model User {
+  id             String   @id @default(cuid())
+  supabaseUserId String   @unique // ID do usuário no Supabase Auth
+  organizationId String
+  name           String
+  email          String
+  role           UserRole @default(OPERATOR)
+  avatarUrl      String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
+  sales          Sale[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────
+// CATEGORIA DE PRODUTO
+// ─────────────────────────────────────────────────
+
+model Category {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  parentId       String? // subcategoria: aponta para outra Category
+  color          String? // cor hex para exibição
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       Category?    @relation("SubCategories", fields: [parentId], references: [id])
+  children     Category[]   @relation("SubCategories")
+  products     Product[]
+
+  @@unique([organizationId, name])
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────────
+// FORNECEDOR
+// ─────────────────────────────────────────────────
+
+model Supplier {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  cnpj           String?
+  contactName    String?
+  phone          String?
+  email          String?
+  website        String?
+  address        String?
+  deliveryDays   Int?    // prazo médio de entrega em dias
+  notes          String?
+  isActive       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+  rawMaterials   RawMaterial[]
+
+  @@map("suppliers")
+}
+
+// ─────────────────────────────────────────────────
+// PRODUTO
+// ─────────────────────────────────────────────────
+
+model Product {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  sku            String
+  ean            String?  // código de barras EAN/QR
+  description    String?
+  categoryId     String?
+  supplierId     String?
+  unit           String   @default("un") // unidade de medida: un, kg, lt, cx, etc.
+  costPrice      Decimal  @db.Decimal(10, 2) // preço de custo
+  salePrice      Decimal  @db.Decimal(10, 2) // preço de venda
+  minStock       Int      @default(0) // estoque mínimo (alerta)
+  currentStock   Int      @default(0) // saldo calculado (denormalizado para performance)
+  imageUrl       String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  supplier       Supplier?       @relation(fields: [supplierId], references: [id])
+  stockMovements StockMovement[]
+  saleItems      SaleItem[]
+  purchaseItems  PurchaseOrderItem[]
+  bom            ProductRawMaterial[]
+
+  @@unique([organizationId, sku])
+  @@map("products")
+}
+
+// ─────────────────────────────────────────────────
+// LOCAL DE ARMAZENAMENTO
+// ─────────────────────────────────────────────────
+
+model StockLocation {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String  // ex: "Loja A", "Depósito", "Loja B"
+  address        String?
+  isDefault      Boolean @default(false)
+  isActive       Boolean @default(true)
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
+
+  @@unique([organizationId, name])
+  @@map("stock_locations")
+}
+
+// ─────────────────────────────────────────────────
+// MOVIMENTAÇÃO DE ESTOQUE (IMUTÁVEL)
+// ─────────────────────────────────────────────────
+
+enum MovementType {
+  PURCHASE    // entrada: compra de fornecedor
+  PRODUCTION  // entrada: produção interna (consome matérias-primas)
+  RETURN      // entrada: devolução de cliente
+  ADJUSTMENT  // entrada/saída: ajuste manual
+  INVENTORY   // entrada/saída: inventário/contagem
+  SALE        // saída: venda
+  LOSS        // saída: perda/avaria
+  TRANSFER    // transferência entre locais
+  REVERSAL    // estorno de outra movimentação
+}
+
+model StockMovement {
+  id             String       @id @default(cuid())
+  organizationId String
+  productId      String
+  userId         String       // responsável pela movimentação
+  locationId     String?      // local de armazenamento
+  type           MovementType
+  quantity       Int          // positivo = entrada, negativo = saída
+  unitCost       Decimal?     @db.Decimal(10, 2) // custo unitário (para entradas)
+  reason         String?      // motivo / observação
+  reference      String?      // número de NF, pedido, etc.
+  saleId         String?      // se originado de uma venda
+  reversedById   String?      // id da movimentação que estornou esta
+  createdAt      DateTime     @default(now())
+
+  // Movimentações são IMUTÁVEIS — sem updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product        @relation(fields: [productId], references: [id])
+  user         User           @relation(fields: [userId], references: [id])
+  location     StockLocation? @relation(fields: [locationId], references: [id])
+  sale         Sale?          @relation(fields: [saleId], references: [id])
+
+  @@map("stock_movements")
+}
+
+// ─────────────────────────────────────────────────
+// CLIENTE
+// ─────────────────────────────────────────────────
+
+model Customer {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  cpf            String?
+  email          String?
+  phone          String?
+  address        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sales        Sale[]
+
+  @@map("customers")
+}
+
+// ─────────────────────────────────────────────────
+// VENDA
+// ─────────────────────────────────────────────────
+
+enum PaymentMethod {
+  CASH        // dinheiro
+  CREDIT_CARD // cartão de crédito
+  DEBIT_CARD  // cartão de débito
+  PIX         // PIX
+  INSTALLMENT // crediário / parcelado
+  OTHER
+}
+
+enum SaleStatus {
+  COMPLETED // finalizada
+  CANCELLED // cancelada (itens devolvidos ao estoque)
+}
+
+model Sale {
+  id             String        @id @default(cuid())
+  organizationId String
+  userId         String        // vendedor
+  customerId     String?       // cliente (opcional)
+  status         SaleStatus    @default(COMPLETED)
+  paymentMethod  PaymentMethod
+  subtotal       Decimal       @db.Decimal(10, 2)
+  discount       Decimal       @default(0) @db.Decimal(10, 2)
+  total          Decimal       @db.Decimal(10, 2)
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id])
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  items          SaleItem[]
+  stockMovements StockMovement[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2) // preço no momento da venda
+  unitCost  Decimal @db.Decimal(10, 2) // custo no momento da venda
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("sale_items")
+}
+
+// ─────────────────────────────────────────────────
+// ORDEM DE COMPRA
+// ─────────────────────────────────────────────────
+
+enum PurchaseOrderStatus {
+  DRAFT     // rascunho
+  SENT      // enviado ao fornecedor
+  RECEIVED  // recebido (itens entraram no estoque)
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id             String              @id @default(cuid())
+  organizationId String
+  supplierId     String
+  status         PurchaseOrderStatus @default(DRAFT)
+  expectedDate   DateTime?
+  notes          String?
+  total          Decimal             @default(0) @db.Decimal(10, 2)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  supplier     Supplier           @relation(fields: [supplierId], references: [id])
+  items        PurchaseOrderItem[]
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id              String  @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Int
+  unitCost        Decimal @db.Decimal(10, 2)
+  subtotal        Decimal @db.Decimal(10, 2)
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id])
+
+  @@map("purchase_order_items")
+}
+
+// ─────────────────────────────────────────────────
+// MATÉRIA-PRIMA
+// ─────────────────────────────────────────────────
+
+model RawMaterial {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  unit           String   // kg, g, L, ml, un, m, m², etc.
+  currentStock   Float    @default(0)
+  minStock       Float    @default(0)
+  costPerUnit    Decimal  @default(0) @db.Decimal(10, 4) // custo por unidade (4 casas para gramas/ml)
+  supplierId     String?
+  notes          String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  supplier     Supplier?            @relation(fields: [supplierId], references: [id])
+  productLinks ProductRawMaterial[]
+  movements    RawMaterialMovement[]
+
+  @@map("raw_materials")
+}
+
+// BOM — Ficha Técnica do Produto (Bill of Materials)
+model ProductRawMaterial {
+  id            String @id @default(cuid())
+  productId     String
+  rawMaterialId String
+  quantity      Float  // quantidade de matéria-prima por 1 unidade do produto
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rawMaterial RawMaterial @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, rawMaterialId])
+  @@map("product_raw_materials")
+}
+
+// Movimentações de matéria-prima (imutável)
+enum RawMovementType {
+  IN         // entrada: compra / reposição manual
+  OUT        // saída: consumo por produção
+  ADJUSTMENT // ajuste de inventário
+}
+
+model RawMaterialMovement {
+  id             String          @id @default(cuid())
+  organizationId String
+  rawMaterialId  String
+  type           RawMovementType
+  quantity       Float           // positivo = entrada, negativo = saída
+  note           String?
+  productId      String?         // produto que consumiu (para OUT de produção)
+  createdAt      DateTime        @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  rawMaterial  RawMaterial  @relation(fields: [rawMaterialId], references: [id])
+
+  @@map("raw_material_movements")
+}
+
+// Relação de Organization com novos modelos
+// (adicionado inline acima via rawMaterials e rawMaterialMovements)
