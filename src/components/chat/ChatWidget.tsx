@@ -151,21 +151,27 @@ function SuccessCard({ data }: { data: any }) {
 }
 
 function CardRenderer({ card }: { card: ChatCard }) {
-  switch (card.type) {
-    case "kpi":           return <KpiCard data={card.data} />;
-    case "alert-list":    return <AlertListCard data={card.data} />;
-    case "product-list":  return <ProductListCard data={card.data as any[]} />;
-    case "sale-list":     return <SaleListCard data={card.data as any[]} />;
-    case "supplier-list": return <SupplierListCard data={card.data as any[]} />;
-    case "profit-list":   return <ProfitListCard data={card.data} />;
-    case "success":       return <SuccessCard data={card.data} />;
-    default:              return null;
+  try {
+    if (!card?.data) return null;
+    switch (card.type) {
+      case "kpi":           return <KpiCard data={card.data} />;
+      case "alert-list":    return <AlertListCard data={card.data} />;
+      case "product-list":  return <ProductListCard data={card.data as any[]} />;
+      case "sale-list":     return <SaleListCard data={card.data as any[]} />;
+      case "supplier-list": return <SupplierListCard data={card.data as any[]} />;
+      case "profit-list":   return <ProfitListCard data={card.data} />;
+      case "success":       return <SuccessCard data={card.data} />;
+      default:              return null;
+    }
+  } catch {
+    return null;
   }
 }
 
 // ─── Markdown mínimo ─────────────────────────────────────────────────────────
 
 function renderMarkdown(text: string) {
+  if (!text) return null;
   return text
     .split("\n")
     .map((line, i) => {
@@ -205,7 +211,7 @@ function MessageBubble({ message }: { message: Message }) {
       <div className="flex-1 min-w-0">
         <div className="bg-zinc-800/80 border border-zinc-700/50 rounded-2xl rounded-tl-sm px-3.5 py-2.5">
           <p className="text-xs text-zinc-300 leading-relaxed">{renderMarkdown(message.content)}</p>
-          {message.cards?.map((card, i) => (
+          {message.cards?.map((card, i) => card && (
             <CardRenderer key={i} card={card} />
           ))}
         </div>
@@ -261,8 +267,8 @@ export function ChatWidget() {
     {
       id: "welcome",
       role: "assistant",
-      content: "Olá! Sou o assistente do **Deppio** 👋\nPosso consultar dados, cadastrar produtos e registrar movimentações. O que precisa?",
-      followUps: ["Como foi hoje?", "O que precisa repor?", "Ver lucratividade"],
+      content: "Olá! Sou o assistente do **Deppio** 👋\nPosso consultar dados do seu negócio, cadastrar produtos e registrar movimentações.\n\n💡 _Experimente perguntar:_",
+      followUps: ["Como foi hoje?", "O que precisa repor?", "Ver lucratividade", "Listar produtos", "Ver fornecedores", "Ver vendas recentes"],
       timestamp: new Date(),
     },
   ]);
