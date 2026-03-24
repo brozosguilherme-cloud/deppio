@@ -347,11 +347,7 @@ export default function MateriasPrimasPage() {
 
   const lowCount = rawMaterials.filter(r => r.currentStock < r.minStock).length;
 
-  if (!canAccess(plan, "rawMaterials")) {
-    return <UpgradeRequired feature="Matérias-primas e BOM" />;
-  }
-
-  return (
+  const pageContent = (
     <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -461,4 +457,10 @@ export default function MateriasPrimasPage() {
       )}
     </div>
   );
+
+  if (!canAccess(plan, "rawMaterials")) {
+    return <UpgradeRequired feature="Matérias-primas e BOM">{pageContent}</UpgradeRequired>;
+  }
+
+  return pageContent;
 }

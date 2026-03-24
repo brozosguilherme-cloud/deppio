@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { usePlan } from "@/contexts/PlanContext";
+import { usePlanContext } from "@/contexts/PlanContext";
 import { canAccess } from "@/lib/plans";
 
 const navItems = [
@@ -46,7 +46,7 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const plan = usePlan();
+  const { plan, isDemo } = usePlanContext();
   const [collapsed, setCollapsed] = useState(false);
 
   const content = (
@@ -89,7 +89,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       {/* Navegação */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const isLocked = item.proFeature !== null && !canAccess(plan, item.proFeature);
+          const isLocked = !isDemo && item.proFeature !== null && !canAccess(plan, item.proFeature);
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -151,6 +151,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 )}
               />
               {!collapsed && <span>{item.label}</span>}
+              {!collapsed && item.proFeature && isDemo && !isActive && (
+                <span className="ml-auto text-[9px] font-bold tracking-wider uppercase bg-primary-500/10 text-primary-500/70 border border-primary-500/20 px-1.5 py-0.5 rounded">
+                  Pro
+                </span>
+              )}
               {!collapsed && isActive && (
                 <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
               )}

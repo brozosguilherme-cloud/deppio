@@ -3,13 +3,30 @@
 import { useRouter } from "next/navigation";
 import { Lock, Zap, ArrowRight } from "lucide-react";
 import { Button } from "./Button";
+import { useIsDemo } from "@/contexts/PlanContext";
+import { DemoProBanner } from "./DemoProBanner";
 
 interface UpgradeRequiredProps {
   feature: string;
+  children?: React.ReactNode;
 }
 
-export function UpgradeRequired({ feature }: UpgradeRequiredProps) {
+/**
+ * Em modo demo: mostra o conteúdo com banner informativo.
+ * Em produção com plano insuficiente: tela de bloqueio completa.
+ */
+export function UpgradeRequired({ feature, children }: UpgradeRequiredProps) {
   const router = useRouter();
+  const isDemo = useIsDemo();
+
+  if (isDemo && children) {
+    return (
+      <div>
+        <DemoProBanner feature={feature} />
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">

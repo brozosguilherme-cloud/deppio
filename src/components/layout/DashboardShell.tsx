@@ -36,9 +36,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }, [router]);
 
   const plan: Plan = org?.plan ?? "ESSENCIAL";
+  const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder") ||
+    (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("your-project");
 
   return (
-    <PlanProvider value={plan}>
+    <PlanProvider value={{ plan, isDemo }}>
       <div className="flex h-screen overflow-hidden bg-surface-700">
         {/* Overlay mobile */}
         {mobileSidebarOpen && (

@@ -3,7 +3,14 @@
 import { createContext, useContext } from "react";
 import type { Plan } from "@/lib/plans";
 
-const PlanContext = createContext<Plan>("ESSENCIAL");
+interface PlanContextValue {
+  plan: Plan;
+  isDemo: boolean;
+}
 
-export const usePlan = () => useContext(PlanContext);
+const PlanContext = createContext<PlanContextValue>({ plan: "ESSENCIAL", isDemo: true });
+
+export const usePlan = () => useContext(PlanContext).plan;
+export const useIsDemo = () => useContext(PlanContext).isDemo;
+export const usePlanContext = () => useContext(PlanContext);
 export const PlanProvider = PlanContext.Provider;

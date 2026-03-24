@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User, Loader2, AlertTriangle, TrendingUp, Package, ShoppingCart, Users, CheckCircle, Lock, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatCard, ChatResponse } from "@/lib/chat-engine";
-import { usePlan } from "@/contexts/PlanContext";
+import { usePlanContext } from "@/contexts/PlanContext";
 import { canAccess } from "@/lib/plans";
 import { useRouter } from "next/navigation";
 
@@ -253,9 +253,9 @@ function TypingIndicator() {
 // ─── ChatWidget principal ─────────────────────────────────────────────────────
 
 export function ChatWidget() {
-  const plan = usePlan();
+  const { plan, isDemo } = usePlanContext();
   const router = useRouter();
-  const hasAiChat = canAccess(plan, "aiChat");
+  const hasAiChat = isDemo || canAccess(plan, "aiChat");
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
