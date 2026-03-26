@@ -41,7 +41,7 @@ function extractProductName(text: string): string | undefined {
   ];
   for (const p of patterns) {
     const m = text.match(p);
-    if (m?.[1]?.trim().length > 2) return m[1].trim();
+    if (m && m[1] && m[1].trim().length > 2) return m[1].trim();
   }
   return undefined;
 }

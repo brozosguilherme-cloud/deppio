@@ -72,7 +72,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (e) {
     console.error("[API] PUT /products/[id]/bom error:", e);
     return NextResponse.json({ error: "Erro ao salvar ficha técnica" }, { status: 500 });
   }
