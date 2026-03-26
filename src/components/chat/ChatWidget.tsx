@@ -262,7 +262,9 @@ function TypingIndicator() {
 export function ChatWidget() {
   const { plan, isDemo } = usePlanContext();
   const router = useRouter();
-  const hasAiChat = isDemo || canAccess(plan, "aiChat");
+  // Chat IA desativado até integração com API de IA — apenas demo por enquanto
+  const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED === "true";
+  const hasAiChat = chatEnabled && (isDemo || canAccess(plan, "aiChat"));
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
