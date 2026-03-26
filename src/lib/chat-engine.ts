@@ -240,7 +240,7 @@ export async function generateResponse(
     }
 
     case "profitability": {
-      const data: any = await getProfitability(orgId);
+      const data: any = await getProfitability();
       if (!data) return { message: "Dados de lucratividade não disponíveis.", followUps: FOLLOWUPS.profitability };
       const top5 = data.products?.slice(0, 5) ?? [];
       return {

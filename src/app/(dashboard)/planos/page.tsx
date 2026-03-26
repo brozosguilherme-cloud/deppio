@@ -2,7 +2,6 @@
 
 import { toast } from "sonner";
 import { Check, X, Zap, Crown } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { usePlan } from "@/contexts/PlanContext";
 import { PLANS } from "@/lib/plans";
 import { formatCurrency } from "@/lib/utils";
@@ -24,7 +23,6 @@ const COMPARISON = [
 
 export default function PlanosPage() {
   const currentPlan = usePlan();
-  const router = useRouter();
 
   function handleSelect(plan: "ESSENCIAL" | "PRO") {
     if (plan === currentPlan) {
