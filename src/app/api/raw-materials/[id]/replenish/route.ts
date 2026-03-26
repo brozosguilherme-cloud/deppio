@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAuthUser, unauthorized, isDemoMode } from "@/lib/auth";
+import { getAuthUser, unauthorized, isDemoMode, planForbidden } from "@/lib/auth";
+import { canAccess } from "@/lib/plans";
 import { prisma } from "@/lib/prisma";
 import { DEMO_RAW_MATERIALS } from "@/lib/demo-data";
 
@@ -8,6 +9,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const user = await getAuthUser();
   if (!user) return unauthorized();
   if (user.role === "VIEWER") return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+
+  const plan = (user.organization?.plan ?? "ESSENCIAL") as "ESSENCIAL" | "PRO";
+  if (!isDemoMode() && !canAccess(plan, "rawMaterials")) {
+    return planForbidden("Matérias-primas");
+  }
 
   if (isDemoMode()) {
     const { quantity } = await request.json();

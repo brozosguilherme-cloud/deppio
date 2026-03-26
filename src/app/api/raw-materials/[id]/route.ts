@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
-import { getAuthUser, unauthorized, isDemoMode } from "@/lib/auth";
+import { getAuthUser, unauthorized, isDemoMode, planForbidden } from "@/lib/auth";
+import { canAccess } from "@/lib/plans";
 import { prisma } from "@/lib/prisma";
 import { DEMO_RAW_MATERIALS } from "@/lib/demo-data";
+
+function checkPlan(user: Awaited<ReturnType<typeof getAuthUser>>) {
+  const plan = (user?.organization?.plan ?? "ESSENCIAL") as "ESSENCIAL" | "PRO";
+  return !isDemoMode() && !canAccess(plan, "rawMaterials");
+}
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const user = await getAuthUser();
   if (!user) return unauthorized();
+  if (checkPlan(user)) return planForbidden("Matérias-primas");
 
   if (isDemoMode()) {
     const rm = DEMO_RAW_MATERIALS.find(r => r.id === params.id);
@@ -32,6 +39,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   const user = await getAuthUser();
   if (!user) return unauthorized();
   if (user.role === "VIEWER") return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  if (checkPlan(user)) return planForbidden("Matérias-primas");
 
   if (isDemoMode()) {
     const body = await request.json();
@@ -67,6 +75,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const user = await getAuthUser();
   if (!user) return unauthorized();
   if (user.role !== "ADMIN") return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  if (checkPlan(user)) return planForbidden("Matérias-primas");
 
   if (isDemoMode()) return NextResponse.json({ success: true, demo: true });
 

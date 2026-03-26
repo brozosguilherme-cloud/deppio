@@ -1,17 +1,41 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { rateLimit, getRequestIp } from "@/lib/rate-limit";
+
+const registerSchema = z.object({
+  supabaseUserId: z.string().min(1).max(255),
+  email: z.string().email().max(255),
+  name: z.string().min(1).max(100).trim(),
+  companyName: z.string().min(1).max(100).trim(),
+});
 
 /**
  * POST /api/auth/register
  * Cria a Organization e o User (admin) após o cadastro no Supabase Auth.
  */
 export async function POST(request: Request) {
-  try {
-    const { supabaseUserId, email, name, companyName } = await request.json();
+  // Rate limiting: máx 10 cadastros por IP por 10 minutos
+  const ip = getRequestIp(request);
+  const { allowed } = rateLimit(`register:${ip}`, 10, 10 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Aguarde alguns minutos." },
+      { status: 429 }
+    );
+  }
 
-    if (!supabaseUserId || !email || !name || !companyName) {
-      return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
+  try {
+    const body = await request.json();
+    const parsed = registerSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { supabaseUserId, email, name, companyName } = parsed.data;
 
     // Verifica se usuário já existe (evita duplicata)
     const existing = await prisma.user.findUnique({ where: { supabaseUserId } });

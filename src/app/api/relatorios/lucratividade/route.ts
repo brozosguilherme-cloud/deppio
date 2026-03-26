@@ -1,12 +1,18 @@
-import { isDemoMode } from "@/lib/auth";
+import { isDemoMode, planForbidden } from "@/lib/auth";
 import { DEMO_RELATORIO } from "@/lib/demo-data";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser, unauthorized } from "@/lib/auth";
+import { canAccess } from "@/lib/plans";
 
 export async function GET() {
   const user = await getAuthUser();
   if (!user) return unauthorized();
+
+  const plan = (user.organization?.plan ?? "ESSENCIAL") as "ESSENCIAL" | "PRO";
+  if (!isDemoMode() && !canAccess(plan, "advancedReports")) {
+    return planForbidden("Relatórios avançados");
+  }
 
   const orgId = user.organizationId;
 

@@ -23,7 +23,7 @@ const DEMO_USER = {
     id: "demo-org",
     name: "Demo Empresa",
     slug: "demo",
-    plan: "FREE",
+    plan: "ESSENCIAL",
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -59,4 +59,12 @@ export function unauthorized() {
 /** Resposta padrão de forbidden (sem permissão) */
 export function forbidden() {
   return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+}
+
+/** Resposta de recurso bloqueado pelo plano */
+export function planForbidden(feature: string) {
+  return NextResponse.json(
+    { error: `"${feature}" requer o plano Pro.`, upgrade: true },
+    { status: 403 }
+  );
 }
