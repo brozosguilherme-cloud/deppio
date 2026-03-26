@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       orderBy: { rawMaterial: { name: "asc" } },
     });
     return NextResponse.json({ bom });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ bom: [] });
   }
 }
@@ -72,7 +72,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     return NextResponse.json({ success: true });
-  } catch (e) {
+  } catch {
     console.error("[API] PUT /products/[id]/bom error:", e);
     return NextResponse.json({ error: "Erro ao salvar ficha técnica" }, { status: 500 });
   }

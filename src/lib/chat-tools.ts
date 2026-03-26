@@ -5,7 +5,7 @@
 import { isDemoMode } from "./auth";
 import {
   DEMO_PRODUCTS, DEMO_SUPPLIERS, DEMO_RECENT_SALES,
-  DEMO_MOVEMENTS, DEMO_KPIS, DEMO_RELATORIO,
+  DEMO_KPIS, DEMO_RELATORIO,
 } from "./demo-data";
 
 // ─── Leitura ────────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export async function getSuppliers(orgId: string) {
   });
 }
 
-export async function getProfitability(orgId: string) {
+export async function getProfitability(_orgId: string) {
   if (isDemoMode()) return DEMO_RELATORIO;
   return null; // produção: reutilizar lógica do route de relatórios
 }
@@ -132,7 +132,7 @@ export async function createStockEntry(orgId: string, userId: string, data: Stoc
     where: { organizationId: orgId, ...(data.productId ? { id: data.productId } : { name: { contains: data.productName, mode: "insensitive" } }) },
   });
   if (!product) throw new Error("Produto não encontrado");
-  const [movement] = await prisma.$transaction([
+  const [_movement] = await prisma.$transaction([
     prisma.stockMovement.create({
       data: { organizationId: orgId, productId: product.id, userId, type: "PURCHASE", quantity: data.quantity, reason: data.reason || "Entrada via chat" },
     }),

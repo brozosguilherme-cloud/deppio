@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, X, Zap, Crown } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { usePlan } from "@/contexts/PlanContext";
 import { PLANS } from "@/lib/plans";
 import { formatCurrency } from "@/lib/utils";

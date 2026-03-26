@@ -170,7 +170,7 @@ function BOMModal({ product, onClose }: { product: Product; onClose: () => void 
                   <p className="text-xs text-zinc-400">Custo calculado pelo BOM</p>
                   <p className="text-lg font-bold text-primary-400 mt-0.5">
                     {bom.reduce((sum, item) => {
-                      const rm = rawMaterials.find(r => r.id === item.rawMaterialId) as any;
+                      const rm = rawMaterials.find(r => r.id === item.rawMaterialId) as { costPerUnit?: number } | undefined;
                       return sum + (Number(rm?.costPerUnit ?? 0) * item.quantity);
                     }, 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                   </p>

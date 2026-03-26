@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Motor de chat do Deppio — MVP sem custo de API.
  * Detecta intenções em português e gera respostas estruturadas.

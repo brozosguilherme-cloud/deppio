@@ -25,13 +25,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    const where = {
-      organizationId: user.organizationId,
-      isActive: true,
-      ...(search && { name: { contains: search, mode: "insensitive" as const } }),
-      ...(lowStock && { currentStock: { lt: prisma.rawMaterial.fields.minStock } }),
-    };
-
     const rawMaterials = await prisma.rawMaterial.findMany({
       where: { organizationId: user.organizationId, isActive: true,
         ...(search && { name: { contains: search, mode: "insensitive" } }),

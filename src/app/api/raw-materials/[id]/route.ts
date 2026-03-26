@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     });
     if (!rm) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     return NextResponse.json(rm);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Erro ao buscar matéria-prima" }, { status: 500 });
   }
 }
@@ -66,7 +66,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     if (rm.count === 0) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     return NextResponse.json({ success: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Erro ao atualizar matéria-prima" }, { status: 500 });
   }
 }
@@ -85,7 +85,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
       data: { isActive: false },
     });
     return NextResponse.json({ success: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Erro ao remover matéria-prima" }, { status: 500 });
   }
 }

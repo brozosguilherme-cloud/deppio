@@ -52,7 +52,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     ]);
 
     return NextResponse.json({ success: true, newStock: updated.currentStock });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Erro ao repor estoque" }, { status: 500 });
   }
 }

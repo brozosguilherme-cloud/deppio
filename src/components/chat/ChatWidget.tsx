@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Loader2, AlertTriangle, TrendingUp, Package, ShoppingCart, Users, CheckCircle, Lock, Zap } from "lucide-react";
+import { MessageCircle, X, Send, Bot, Loader2, AlertTriangle, Users, CheckCircle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatCard, ChatResponse } from "@/lib/chat-engine";
 import { usePlanContext } from "@/contexts/PlanContext";

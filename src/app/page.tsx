@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Package, Monitor, TrendingUp, Truck, FlaskConical, Bot,
+  Package, Monitor, Truck, FlaskConical, Bot,
   ArrowRight, Check, Zap, ChevronRight, Star, BarChart3,
   ShieldCheck, Smartphone, Crown
 } from "lucide-react";
@@ -446,7 +446,7 @@ function Testimonials() {
                   <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p className="text-zinc-300 text-sm leading-relaxed mb-4">"{t.text}"</p>
+              <p className="text-zinc-300 text-sm leading-relaxed mb-4">&quot;{t.text}&quot;</p>
               <div>
                 <p className="text-white font-semibold text-sm">{t.name}</p>
                 <p className="text-zinc-500 text-xs">{t.role}</p>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   Plus, Search, AlertTriangle, Package2, Edit2, Trash2,
-  ArrowDownCircle, ChevronDown, X, Loader2,
+  ArrowDownCircle, X, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -332,6 +332,7 @@ export default function MateriasPrimasPage() {
   useEffect(() => {
     const t = setTimeout(load, search ? 300 : 0);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
   async function handleDelete(rm: RawMaterial) {

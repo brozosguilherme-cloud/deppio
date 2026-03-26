@@ -123,7 +123,6 @@ export default function OnboardingPage() {
         {step < 4 && (
           <div className="flex items-center justify-between mb-8 px-2">
             {STEPS.slice(0, 3).map((s, i) => {
-              const Icon = s.icon;
               const isActive = s.id === step;
               const isDone = s.id < step;
               return (
