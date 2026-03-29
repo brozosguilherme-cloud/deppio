@@ -10,9 +10,10 @@ interface TopbarProps {
   orgName?: string;
   plan?: Plan;
   onMenuClick?: () => void;
+  settingsHref?: string;
 }
 
-export function Topbar({ orgName, plan, onMenuClick }: TopbarProps) {
+export function Topbar({ orgName, plan, onMenuClick, settingsHref = "/configuracoes" }: TopbarProps) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -37,7 +38,7 @@ export function Topbar({ orgName, plan, onMenuClick }: TopbarProps) {
         <div className="w-7 h-7 bg-primary-500 rounded-lg flex items-center justify-center shadow-md shadow-primary-500/20 shrink-0">
           <span className="text-zinc-900 font-black text-sm leading-none select-none">D</span>
         </div>
-        <h1 className="text-base font-bold text-white tracking-tight truncate max-w-48">
+        <h1 className="text-base font-bold text-white tracking-tight truncate max-w-28 sm:max-w-48">
           {orgName ?? "Deppio"}
         </h1>
         {plan && (
@@ -61,7 +62,7 @@ export function Topbar({ orgName, plan, onMenuClick }: TopbarProps) {
         </button>
 
         <button
-          onClick={() => router.push("/configuracoes")}
+          onClick={() => router.push(settingsHref)}
           className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-surface-300 transition-colors text-zinc-500 hover:text-zinc-300"
           title="Configurações da empresa"
         >

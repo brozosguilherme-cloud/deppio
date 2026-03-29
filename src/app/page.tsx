@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Package, Monitor, Truck, FlaskConical, Bot,
+  Package, Monitor, Truck, FlaskConical,
   ArrowRight, Check, Zap, ChevronRight, Star, BarChart3,
-  ShieldCheck, Smartphone, Crown
+  ShieldCheck, Smartphone, Crown, Menu, X
 } from "lucide-react";
+import { useState } from "react";
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
 function Navbar() {
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <header className="fixed top-0 inset-x-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-white/5">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -34,12 +36,36 @@ function Navbar() {
           </Link>
           <button
             onClick={() => router.push("/cadastro")}
-            className="bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold text-sm px-4 py-2 rounded-lg transition-colors"
+            className="bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold text-sm px-4 py-2 rounded-lg transition-colors hidden sm:block"
           >
-            Começar grátis
+            Criar conta
+          </button>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
+
+      {/* Menu mobile */}
+      {mobileOpen && (
+        <div className="md:hidden bg-zinc-950/95 backdrop-blur-md border-b border-white/5 px-4 pb-4 space-y-1">
+          <a href="#funcionalidades" onClick={() => setMobileOpen(false)} className="block py-2.5 text-sm text-zinc-400 hover:text-white transition-colors">Funcionalidades</a>
+          <a href="#como-funciona" onClick={() => setMobileOpen(false)} className="block py-2.5 text-sm text-zinc-400 hover:text-white transition-colors">Como funciona</a>
+          <a href="#planos" onClick={() => setMobileOpen(false)} className="block py-2.5 text-sm text-zinc-400 hover:text-white transition-colors">Planos</a>
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+            <Link href="/login" onClick={() => setMobileOpen(false)} className="text-sm text-zinc-400 hover:text-white transition-colors py-2">Entrar</Link>
+            <button
+              onClick={() => { setMobileOpen(false); router.push("/cadastro"); }}
+              className="bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold text-sm px-4 py-2.5 rounded-lg transition-colors w-full"
+            >
+              Criar conta
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -58,7 +84,7 @@ function Hero() {
       <div className="max-w-4xl mx-auto relative">
         <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
           <Zap className="w-3 h-3" />
-          14 dias grátis · Sem cartão de crédito
+          Comece agora · Cancele quando quiser
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight mb-6">
@@ -76,11 +102,11 @@ function Hero() {
             onClick={() => router.push("/cadastro")}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold text-base px-7 py-3.5 rounded-xl transition-all hover:scale-105 shadow-lg shadow-yellow-400/20"
           >
-            Começar 14 dias grátis
+            Criar conta
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/demo")}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white font-semibold text-base px-7 py-3.5 rounded-xl border border-white/10 transition-colors"
           >
             Ver demonstração
@@ -189,14 +215,6 @@ const FEATURES = [
     color: "text-yellow-400",
     bg: "bg-yellow-400/10",
   },
-  {
-    icon: Bot,
-    title: "Assistente IA integrado",
-    desc: "Consulte dados, crie produtos e registre movimentações em linguagem natural.",
-    pro: true,
-    color: "text-yellow-400",
-    bg: "bg-yellow-400/10",
-  },
 ];
 
 function Features() {
@@ -208,7 +226,7 @@ function Features() {
             Tudo que você precisa em um só lugar
           </h2>
           <p className="text-zinc-400 text-lg max-w-xl mx-auto">
-            Do controle de estoque ao assistente de IA — sem precisar de múltiplas ferramentas.
+            Do controle de estoque aos relatórios — sem precisar de múltiplas ferramentas.
           </p>
         </div>
 
@@ -249,7 +267,7 @@ const STEPS = [
   {
     step: "01",
     title: "Escolha seu plano",
-    desc: "Selecione o plano ideal para o porte do seu negócio. Comece com 14 dias grátis.",
+    desc: "Selecione o plano ideal para o porte do seu negócio. Assine e comece a usar imediatamente.",
   },
   {
     step: "02",
@@ -304,14 +322,11 @@ const PLAN_HIGHLIGHTS = {
     "Gestão de fornecedores",
     "Faturamento básico",
     "Relatórios essenciais",
-    "Até 2 usuários",
   ],
   PRO: [
     "Tudo do plano Essencial",
     "Matérias-primas e BOM",
-    "Assistente IA integrado",
     "Relatórios avançados",
-    "Usuários ilimitados",
     "Suporte prioritário",
   ],
 };
@@ -326,7 +341,7 @@ function Pricing() {
             Planos simples e transparentes
           </h2>
           <p className="text-zinc-400 text-lg">
-            14 dias grátis em qualquer plano. Cancele quando quiser.
+            Planos acessíveis para todos os portes. Cancele quando quiser.
           </p>
         </div>
 
@@ -353,7 +368,7 @@ function Pricing() {
               onClick={() => router.push("/cadastro?plano=essencial")}
               className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-colors"
             >
-              Começar grátis
+              Assinar Essencial
             </button>
           </div>
 
@@ -383,7 +398,7 @@ function Pricing() {
               onClick={() => router.push("/cadastro?plano=pro")}
               className="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-yellow-400/20"
             >
-              Começar grátis
+              Assinar Pro
             </button>
           </div>
         </div>
@@ -392,7 +407,7 @@ function Pricing() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-zinc-500">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-zinc-600" />
-            Sem cartão de crédito
+            Pagamento seguro
           </div>
           <div className="flex items-center gap-2">
             <Smartphone className="w-4 h-4 text-zinc-600" />
@@ -477,10 +492,10 @@ function FinalCTA() {
             onClick={() => router.push("/cadastro")}
             className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold text-base px-8 py-4 rounded-xl transition-all hover:scale-105 shadow-lg shadow-yellow-400/20"
           >
-            Começar 14 dias grátis
+            Criar conta e começar
             <ChevronRight className="w-5 h-5" />
           </button>
-          <p className="text-zinc-600 text-sm mt-4">Sem cartão de crédito · Cancele quando quiser</p>
+          <p className="text-zinc-600 text-sm mt-4">Pagamento seguro · Cancele quando quiser</p>
         </div>
       </div>
     </section>
@@ -503,9 +518,9 @@ function Footer() {
           © {new Date().getFullYear()} Deppio. Todos os direitos reservados.
         </p>
         <div className="flex gap-5 text-xs text-zinc-600">
-          <a href="#" className="hover:text-zinc-400 transition-colors">Termos de uso</a>
-          <a href="#" className="hover:text-zinc-400 transition-colors">Privacidade</a>
-          <a href="#" className="hover:text-zinc-400 transition-colors">Contato</a>
+          <Link href="/termos" className="hover:text-zinc-400 transition-colors">Termos de uso</Link>
+          <Link href="/privacidade" className="hover:text-zinc-400 transition-colors">Privacidade</Link>
+          <a href="mailto:contato@deppio.com.br" className="hover:text-zinc-400 transition-colors">Contato</a>
         </div>
       </div>
     </footer>

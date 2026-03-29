@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Check, Crown, ChevronLeft, Zap, Eye, EyeOff, CheckCircle, ArrowRight } from "lucide-react";
+import { Check, Crown, ChevronLeft, Zap, Eye, EyeOff, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type Plan = "ESSENCIAL" | "PRO";
 
@@ -14,7 +15,7 @@ function StepPlan({ selected, onSelect }: { selected: Plan; onSelect: (p: Plan) 
     <div className="space-y-4">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-black text-white mb-2">Escolha seu plano</h2>
-        <p className="text-zinc-400 text-sm">14 dias grátis · Cancele quando quiser</p>
+        <p className="text-zinc-400 text-sm">Comece agora · Cancele quando quiser</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -40,7 +41,7 @@ function StepPlan({ selected, onSelect }: { selected: Plan; onSelect: (p: Plan) 
             </div>
           </div>
           <ul className="space-y-1 pl-8">
-            {["Produtos, estoque e PDV", "Controle de vendas", "Fornecedores", "Até 2 usuários"].map((f) => (
+            {["Produtos, estoque e PDV", "Controle de vendas", "Fornecedores", "Faturamento básico"].map((f) => (
               <li key={f} className="flex items-center gap-2 text-xs text-zinc-400">
                 <Check className="w-3 h-3 text-zinc-500 shrink-0" />
                 {f}
@@ -75,7 +76,7 @@ function StepPlan({ selected, onSelect }: { selected: Plan; onSelect: (p: Plan) 
             </div>
           </div>
           <ul className="space-y-1 pl-8">
-            {["Tudo do Essencial", "Matérias-primas e BOM", "Assistente IA integrado", "Usuários ilimitados"].map((f) => (
+            {["Tudo do Essencial", "Matérias-primas e BOM", "Relatórios avançados", "Suporte prioritário"].map((f) => (
               <li key={f} className="flex items-center gap-2 text-xs text-zinc-300">
                 <Check className="w-3 h-3 text-yellow-400 shrink-0" />
                 {f}
@@ -86,7 +87,7 @@ function StepPlan({ selected, onSelect }: { selected: Plan; onSelect: (p: Plan) 
       </div>
 
       <p className="text-center text-xs text-zinc-600 pt-2">
-        Sem cartão de crédito necessário para o trial
+        Cancele quando quiser · Sem fidelidade
       </p>
     </div>
   );
@@ -261,7 +262,7 @@ function StepSuccess({ name, plan }: { name: string; plan: Plan }) {
           <span className={plan === "PRO" ? "text-yellow-400 font-bold" : "text-white font-bold"}>
             {plan === "PRO" ? "Pro" : "Essencial"}
           </span>.
-          Seu trial de <strong className="text-white">14 dias</strong> começa agora.
+          Bem-vindo! Sua conta está pronta para uso.
         </p>
       </div>
 
@@ -304,6 +305,8 @@ function CadastroContent() {
   const [plan, setPlan] = useState<Plan>("ESSENCIAL");
   const [company, setCompany] = useState({ companyName: "", businessType: "" });
   const [personal, setPersonal] = useState({ name: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Pré-seleciona plano se vier da landing page
   useEffect(() => {
@@ -319,8 +322,56 @@ function CadastroContent() {
     return true;
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (!canAdvance()) return;
+
+    // Passo 2 → criar conta real
+    if (step === 2) {
+      setLoading(true);
+      setError(null);
+      try {
+        const supabase = createClient();
+
+        // 1. Criar usuário no Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: personal.email,
+          password: personal.password,
+        });
+        if (authError) throw new Error(authError.message);
+        const supabaseUserId = authData.user?.id;
+        if (!supabaseUserId) throw new Error("Erro ao criar usuário");
+
+        // 2. Criar organização + usuário no banco + checkout Stripe
+        const regRes = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            supabaseUserId,
+            email: personal.email,
+            name: personal.name,
+            companyName: company.companyName,
+            plan,
+          }),
+        });
+        if (!regRes.ok) {
+          const err = await regRes.json();
+          throw new Error(err.error ?? "Erro ao registrar empresa");
+        }
+        const regData = await regRes.json();
+        if (regData.checkoutUrl) {
+          window.location.href = regData.checkoutUrl;
+        } else {
+          // Fallback: redireciona ao dashboard
+          window.location.href = "/dashboard";
+        }
+        return;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro inesperado");
+        setLoading(false);
+        return;
+      }
+    }
+
     setStep((s) => s + 1);
   }
 
@@ -343,37 +394,75 @@ function CadastroContent() {
       </header>
 
       {/* Conteúdo */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          {/* Progress steps */}
-          {step < STEPS.length - 1 && (
-            <div className="flex items-center gap-0 mb-10">
-              {STEPS.slice(0, -1).map((s, i) => (
-                <div key={s} className="flex items-center flex-1 last:flex-none">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                      i < step
-                        ? "bg-yellow-400 text-zinc-900"
-                        : i === step
-                          ? "border-2 border-yellow-400 text-yellow-400"
-                          : "border-2 border-zinc-700 text-zinc-600"
-                    }`}>
-                      {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
-                    </div>
-                    <span className={`text-[10px] font-medium hidden sm:block ${i === step ? "text-yellow-400" : "text-zinc-600"}`}>
-                      {s}
-                    </span>
+      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-4xl flex gap-12 items-start">
+
+          {/* Painel lateral — benefícios (apenas desktop) */}
+          <div className="hidden lg:flex flex-col gap-6 w-80 shrink-0 pt-4">
+            <div>
+              <h2 className="text-xl font-black text-white mb-2">Comece a organizar seu negócio agora</h2>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Gerencie estoque, vendas e faturamento em um só lugar.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { title: "PDV completo", desc: "Venda de forma rápida com nosso ponto de venda integrado" },
+                { title: "Controle de estoque em tempo real", desc: "Saiba exatamente o que tem, onde está e quando repor" },
+                { title: "Relatórios inteligentes", desc: "Tome decisões baseadas em dados reais do seu negócio" },
+                { title: "Cancele quando quiser", desc: "Sem fidelidade, sem multa. Você está no controle" },
+              ].map((item) => (
+                <div key={item.title} className="flex gap-3">
+                  <div className="mt-0.5 w-5 h-5 rounded-full bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 text-yellow-400" />
                   </div>
-                  {i < STEPS.length - 2 && (
-                    <div className={`flex-1 h-px mx-2 mt-[-10px] ${i < step ? "bg-yellow-400/40" : "bg-zinc-800"}`} />
-                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
-          )}
 
-          {/* Card */}
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 sm:p-8">
+            <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 mt-2">
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                <span className="text-yellow-400 font-semibold">+500 empresas</span> já usam o Deppio para gerenciar seus negócios em todo o Brasil.
+              </p>
+            </div>
+          </div>
+
+          {/* Formulário */}
+          <div className="flex-1 max-w-md mx-auto lg:mx-0">
+            {/* Progress steps */}
+            {step < STEPS.length - 1 && (
+              <div className="flex items-center gap-0 mb-10">
+                {STEPS.slice(0, -1).map((s, i) => (
+                  <div key={s} className="flex items-center flex-1 last:flex-none">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                        i < step
+                          ? "bg-yellow-400 text-zinc-900"
+                          : i === step
+                            ? "border-2 border-yellow-400 text-yellow-400"
+                            : "border-2 border-zinc-700 text-zinc-600"
+                      }`}>
+                        {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                      </div>
+                      <span className={`text-[10px] font-medium hidden sm:block ${i === step ? "text-yellow-400" : "text-zinc-600"}`}>
+                        {s}
+                      </span>
+                    </div>
+                    {i < STEPS.length - 2 && (
+                      <div className={`flex-1 h-px mx-2 mt-[-10px] ${i < step ? "bg-yellow-400/40" : "bg-zinc-800"}`} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Card */}
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 sm:p-8">
             {step === 0 && (
               <StepPlan selected={plan} onSelect={setPlan} />
             )}
@@ -395,44 +484,54 @@ function CadastroContent() {
 
             {/* Navegação */}
             {step < 3 && (
-              <div className="flex gap-3 mt-8">
-                {step > 0 && (
-                  <button
-                    onClick={() => setStep((s) => s - 1)}
-                    className="flex items-center gap-1.5 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-sm font-medium rounded-xl transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Voltar
-                  </button>
+              <div className="flex flex-col gap-3 mt-8">
+                {error && (
+                  <p className="text-red-400 text-sm text-center bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-2">
+                    {error}
+                  </p>
                 )}
-                <button
-                  onClick={handleNext}
-                  disabled={!canAdvance()}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 font-bold text-sm rounded-xl transition-all ${
-                    step === 2
-                      ? "bg-yellow-400 hover:bg-yellow-300 text-zinc-900 disabled:opacity-40"
-                      : "bg-white/10 hover:bg-white/15 text-white border border-white/10 disabled:opacity-40"
-                  }`}
-                >
-                  {step === 2 ? (
-                    <>
-                      <Zap className="w-4 h-4" />
-                      Criar minha conta
-                    </>
-                  ) : (
-                    "Continuar"
+                <div className="flex gap-3">
+                  {step > 0 && (
+                    <button
+                      onClick={() => setStep((s) => s - 1)}
+                      disabled={loading}
+                      className="flex items-center gap-1.5 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-sm font-medium rounded-xl transition-colors disabled:opacity-40"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Voltar
+                    </button>
                   )}
-                </button>
+                  <button
+                    onClick={handleNext}
+                    disabled={!canAdvance() || loading}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 font-bold text-sm rounded-xl transition-all bg-yellow-400 hover:bg-yellow-300 text-zinc-900 disabled:opacity-40 hover:scale-[1.01]"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Criando conta...
+                      </>
+                    ) : step === 2 ? (
+                      <>
+                        <Zap className="w-4 h-4" />
+                        Criar conta e assinar
+                      </>
+                    ) : (
+                      "Continuar"
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Trial info */}
-          {step < 3 && (
-            <p className="text-center text-xs text-zinc-600 mt-4">
-              🔒 Seus dados estão seguros · 14 dias grátis sem compromisso
-            </p>
-          )}
+            {/* Trial info */}
+            {step < 3 && (
+              <p className="text-center text-xs text-zinc-600 mt-4">
+                🔒 Seus dados estão seguros · Cancele quando quiser
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

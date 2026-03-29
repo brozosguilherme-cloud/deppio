@@ -2,10 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 // Rotas públicas que não precisam de autenticação
-const PUBLIC_ROUTES = ["/", "/login", "/cadastro", "/auth/callback"];
+const PUBLIC_ROUTES = ["/", "/login", "/cadastro", "/auth/callback", "/termos", "/privacidade"];
+
+// Prefixo público — demo acessível sem login
+const PUBLIC_PREFIXES = ["/demo"];
 
 // Rotas de API públicas
-const PUBLIC_API_ROUTES = ["/api/auth/register"];
+const PUBLIC_API_ROUTES = ["/api/auth/register", "/api/stripe/webhook"];
 
 function isDemoMode() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -30,6 +33,7 @@ export async function middleware(request: NextRequest) {
   // Rotas públicas: liberar
   if (PUBLIC_ROUTES.includes(pathname)) return NextResponse.next();
   if (PUBLIC_API_ROUTES.some((r) => pathname.startsWith(r))) return NextResponse.next();
+  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
   // Verificar sessão via Supabase
   let response = NextResponse.next({ request });

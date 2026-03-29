@@ -54,22 +54,29 @@ export default function ConfiguracoesPage() {
 
   useEffect(() => {
     fetch("/api/organization")
-      .then((r) => r.json())
-      .then((data) => {
-        reset({
-          name: data.name ?? "",
-          businessType: data.businessType ?? "",
-          description: data.description ?? "",
-          cnpj: data.cnpj ?? "",
-          email: data.email ?? "",
-          phone: data.phone ?? "",
-          address: data.address ?? "",
-          city: data.city ?? "",
-          state: data.state ?? "",
-          zipCode: data.zipCode ?? "",
-          website: data.website ?? "",
-        });
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok) throw new Error(json?.error || `HTTP ${r.status}`);
+        return json;
       })
+      .then((data) => {
+        if (data && data.name) {
+          reset({
+            name: data.name ?? "",
+            businessType: data.businessType ?? "",
+            description: data.description ?? "",
+            cnpj: data.cnpj ?? "",
+            email: data.email ?? "",
+            phone: data.phone ?? "",
+            address: data.address ?? "",
+            city: data.city ?? "",
+            state: data.state ?? "",
+            zipCode: data.zipCode ?? "",
+            website: data.website ?? "",
+          });
+        }
+      })
+      .catch((err) => toast.error(`Erro: ${err.message}`))
       .finally(() => setIsLoading(false));
   }, [reset]);
 
@@ -83,7 +90,9 @@ export default function ConfiguracoesPage() {
       });
 
       if (!res.ok) {
-        toast.error("Erro ao salvar configurações");
+        const errData = await res.json().catch(() => null);
+        const errMsg = errData?.error || "Erro ao salvar configurações";
+        toast.error(errMsg);
         return;
       }
 

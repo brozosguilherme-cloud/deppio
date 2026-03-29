@@ -7,13 +7,26 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Deppio",
+    default: "Deppio — Gestão inteligente de estoque",
     template: "%s · Deppio",
   },
   description:
-    "Deppio — Gestão inteligente de estoque para pequenas e médias empresas. Controle produtos, vendas, faturamento e fornecedores em um só lugar.",
-  keywords: ["gestão de estoque", "controle de estoque", "pdv", "erp", "pme"],
+    "Gestão inteligente de estoque para pequenas e médias empresas. Controle produtos, vendas, faturamento e fornecedores em um só lugar.",
+  keywords: ["gestão de estoque", "controle de estoque", "pdv", "erp", "pme", "inventário", "sistema de estoque"],
   authors: [{ name: "Deppio" }],
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Deppio",
+    title: "Deppio — Gestão inteligente de estoque",
+    description: "Controle produtos, vendas, PDV, matérias-primas e muito mais. Plataforma completa para pequenas e médias empresas brasileiras.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Deppio — Gestão inteligente de estoque",
+    description: "Controle produtos, vendas, PDV e muito mais. Plataforma completa para PMEs brasileiras.",
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://inventory-saas-beta.vercel.app"),
 };
 
 export default function RootLayout({

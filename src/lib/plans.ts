@@ -14,9 +14,7 @@ export const PLANS = {
       suppliers: true,
       billing: true,
       rawMaterials: false,
-      aiChat: false,
       advancedReports: false,
-      maxUsers: 2,
     },
     highlights: [
       "Produtos, estoque e PDV",
@@ -24,7 +22,6 @@ export const PLANS = {
       "Fornecedores",
       "Faturamento básico",
       "Relatórios essenciais",
-      "Até 2 usuários",
     ],
   },
   PRO: {
@@ -40,16 +37,12 @@ export const PLANS = {
       suppliers: true,
       billing: true,
       rawMaterials: true,
-      aiChat: true,
       advancedReports: true,
-      maxUsers: Infinity,
     },
     highlights: [
       "Tudo do plano Essencial",
       "Matérias-primas e BOM",
-      "Assistente IA integrado",
       "Relatórios avançados",
-      "Usuários ilimitados",
       "Suporte prioritário",
     ],
   },
@@ -67,6 +60,5 @@ export function getPlanLabel(plan: Plan): string {
 
 export const PRO_FEATURES: { feature: PlanFeature; label: string }[] = [
   { feature: "rawMaterials", label: "Matérias-primas e BOM" },
-  { feature: "aiChat", label: "Assistente IA" },
   { feature: "advancedReports", label: "Relatórios avançados" },
 ];

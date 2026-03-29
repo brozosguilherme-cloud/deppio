@@ -31,6 +31,9 @@ model Organization {
   description          String?
   onboardingCompleted  Boolean  @default(false)
   plan                 String   @default("ESSENCIAL") // ESSENCIAL | PRO
+  planStatus           String   @default("INACTIVE")  // ACTIVE | INACTIVE | CANCELED | PAST_DUE
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 

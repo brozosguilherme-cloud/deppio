@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { PageLoader } from "@/components/ui/Spinner";
 import { Card, CardContent } from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
+import { usePlan } from "@/contexts/PlanContext";
+import { canAccess } from "@/lib/plans";
+import { UpgradeRequired } from "@/components/ui/UpgradeRequired";
 
 interface ProductProfit {
   productId: string;
@@ -41,24 +44,31 @@ interface ReportData {
 }
 
 export default function RelatoriosPage() {
+  const plan = usePlan();
+  const hasAccess = canAccess(plan, "advancedReports");
   const [data, setData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"products" | "categories" | "low-margin">("products");
 
   useEffect(() => {
+    if (!hasAccess) return;
     fetch("/api/relatorios/lucratividade")
       .then((r) => r.json())
       .then(setData)
       .catch(() => toast.error("Erro ao carregar relatório"))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [hasAccess]);
+
+  if (!hasAccess) {
+    return <UpgradeRequired feature="Relatórios avançados" />;
+  }
 
   function exportCSV() {
     if (!data) return;
 
     const rows = [
       ["Produto", "SKU", "Categoria", "Custo", "Venda", "Qtd Vendida", "Receita", "Lucro Bruto", "Margem %"],
-      ...data.products.map((p) => [
+      ...(data.products ?? []).map((p: ProductProfit) => [
         p.productName,
         p.sku,
         p.category,
@@ -89,12 +99,24 @@ export default function RelatoriosPage() {
   }
 
   if (isLoading) return <PageLoader />;
-  if (!data) return null;
+  if (!data) return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold text-white">Relatórios</h1>
+        <p className="text-sm text-zinc-500">Nenhum dado disponível. Registre produtos e vendas para gerar relatórios de lucratividade.</p>
+      </div>
+    </div>
+  );
+
+  const products = data.products ?? [];
+  const categories = data.categories ?? [];
+  const lowMarginProducts = data.lowMarginProducts ?? [];
+  const summary = data.summary ?? { totalRevenue: 0, totalCost: 0, avgMargin: 0 };
 
   const tabs = [
-    { id: "products", label: "Por produto", count: data.products.length },
-    { id: "categories", label: "Por categoria", count: data.categories.length },
-    { id: "low-margin", label: "Margem baixa", count: data.lowMarginProducts.length },
+    { id: "products", label: "Por produto", count: products.length },
+    { id: "categories", label: "Por categoria", count: categories.length },
+    { id: "low-margin", label: "Margem baixa", count: lowMarginProducts.length },
   ] as const;
 
   return (
@@ -112,34 +134,34 @@ export default function RelatoriosPage() {
       </div>
 
       {/* Sumário */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 text-center">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Receita total</p>
-          <p className="text-xl font-bold text-white mt-1">{formatCurrency(data.summary.totalRevenue)}</p>
+          <p className="text-xl font-bold text-white mt-1">{formatCurrency(summary.totalRevenue)}</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Custo total</p>
-          <p className="text-xl font-bold text-white mt-1">{formatCurrency(data.summary.totalCost)}</p>
+          <p className="text-xl font-bold text-white mt-1">{formatCurrency(summary.totalCost)}</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Margem média</p>
           <p
             className={`text-xl font-bold mt-1 ${
-              data.summary.avgMargin < 10 ? "text-red-600" : "text-green-600"
+              summary.avgMargin < 10 ? "text-red-600" : "text-green-600"
             }`}
           >
-            {data.summary.avgMargin.toFixed(1)}%
+            {summary.avgMargin.toFixed(1)}%
           </p>
         </Card>
       </div>
 
       {/* Alerta de produtos com margem negativa */}
-      {data.lowMarginProducts.length > 0 && (
+      {lowMarginProducts.length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-yellow-800">
-              {data.lowMarginProducts.length} produto(s) com margem abaixo de 10%
+              {lowMarginProducts.length} produto(s) com margem abaixo de 10%
             </p>
             <p className="text-xs text-yellow-700 mt-0.5">
               Revise os preços de custo e venda destes produtos.
@@ -184,7 +206,7 @@ export default function RelatoriosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {data.products.map((p) => (
+                {products.map((p) => (
                   <tr key={p.productId} className="hover:bg-surface-500">
                     <td className="px-4 py-3">
                       <p className="font-medium text-white">{p.productName}</p>
@@ -230,7 +252,7 @@ export default function RelatoriosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {data.categories.map((c) => (
+                {categories.map((c) => (
                   <tr key={c.name} className="hover:bg-surface-500">
                     <td className="px-4 py-3 font-medium text-white">{c.name}</td>
                     <td className="px-4 py-3 text-right text-white font-medium">{formatCurrency(c.totalRevenue)}</td>
@@ -254,14 +276,14 @@ export default function RelatoriosPage() {
       {/* Produtos com margem baixa */}
       {activeTab === "low-margin" && (
         <div className="space-y-3">
-          {data.lowMarginProducts.length === 0 ? (
+          {lowMarginProducts.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12 text-sm text-zinc-600">
                 Todos os produtos têm margem acima de 10%.
               </CardContent>
             </Card>
           ) : (
-            data.lowMarginProducts.map((p) => (
+            lowMarginProducts.map((p) => (
               <div key={p.productId} className="bg-surface-400 rounded-xl border border-zinc-800 p-4">
                 <div className="flex items-start justify-between">
                   <div>

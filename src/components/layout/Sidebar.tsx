@@ -41,9 +41,11 @@ const navItems = [
 interface SidebarProps {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  hrefPrefix?: string;
+  orgName?: string;
 }
 
-export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+export function Sidebar({ mobileOpen = false, onMobileClose, hrefPrefix = "", orgName }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { plan, isDemo } = usePlanContext();
@@ -69,7 +71,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {!collapsed && (
           <div className="flex flex-col leading-none flex-1">
             <span className="font-black text-white text-lg tracking-tight leading-none">
-              Deppio
+              {orgName ?? "Deppio"}
             </span>
             <span className="text-[10px] text-zinc-500 font-medium tracking-widest uppercase mt-0.5">
               Gestão de Estoque
@@ -89,22 +91,25 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       {/* Navegação */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
+          const resolvedHref = `${hrefPrefix}${item.href}`;
           const isLocked = !isDemo && item.proFeature !== null && !canAccess(plan, item.proFeature);
           const isActive =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            pathname === resolvedHref ||
+            (item.href !== "/dashboard" && pathname.startsWith(resolvedHref));
           const Icon = item.icon;
 
           if (isLocked) {
             return (
-              <button
+              <Link
                 key={item.href}
+                href={resolvedHref}
                 title={collapsed ? item.label : undefined}
-                onClick={() => router.push("/planos")}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group border border-transparent",
                   collapsed && "justify-center px-0 py-3",
-                  "text-zinc-600 hover:bg-surface-300 hover:text-zinc-400"
+                  isActive
+                    ? "bg-surface-300 text-zinc-300 border-surface-100"
+                    : "text-zinc-600 hover:bg-surface-300 hover:text-zinc-400"
                 )}
               >
                 <Icon
@@ -123,14 +128,14 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                   </>
                 )}
                 {collapsed && <Lock className="w-2.5 h-2.5 text-zinc-700 absolute" />}
-              </button>
+              </Link>
             );
           }
 
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={resolvedHref}
               title={collapsed ? item.label : undefined}
               onClick={onMobileClose}
               className={cn(
@@ -168,7 +173,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       {!collapsed && (
         <div className="px-3 pb-2">
           <button
-            onClick={() => router.push("/planos")}
+            onClick={() => router.push(`${hrefPrefix}/planos`)}
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-zinc-700 hover:border-primary-500/40 hover:bg-primary-500/5 transition-all group"
           >
             <div className="w-5 h-5 bg-primary-500/10 rounded flex items-center justify-center shrink-0">

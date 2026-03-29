@@ -43,28 +43,28 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KPICard
           title="Produtos ativos"
-          value={kpis.totalProducts}
+          value={kpis.totalProducts ?? 0}
           icon={Package}
           color="blue"
           subtitle="Cadastrados e ativos"
         />
         <KPICard
           title="Total em estoque"
-          value={kpis.totalStock.toLocaleString("pt-BR")}
+          value={(kpis.totalStock ?? 0).toLocaleString("pt-BR")}
           icon={Layers}
           color="purple"
           subtitle="Unidades disponíveis"
         />
         <KPICard
           title="Vendas hoje"
-          value={kpis.salesToday}
+          value={kpis.salesToday ?? 0}
           icon={ShoppingCart}
           color="green"
           subtitle="Transações finalizadas"
         />
         <KPICard
           title="Receita do mês"
-          value={formatCurrency(kpis.revenueMonth)}
+          value={formatCurrency(kpis.revenueMonth ?? 0)}
           icon={DollarSign}
           color="yellow"
           subtitle="Mês atual"
@@ -77,7 +77,7 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-white mb-4">
             Movimentações — últimos 30 dias
           </h2>
-          {kpis.movementsChart.length > 0 ? (
+          {(kpis.movementsChart ?? []).length > 0 ? (
             <MovementsChart data={kpis.movementsChart} />
           ) : (
             <div className="flex items-center justify-center h-48 text-sm text-zinc-600">
@@ -129,12 +129,12 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-white">
               Alertas de estoque
             </h2>
-            {kpis.lowStockProducts.length > 0 && (
+            {(kpis.lowStockProducts ?? []).length > 0 && (
               <Badge color="yellow">{kpis.lowStockProducts.length}</Badge>
             )}
           </div>
 
-          {kpis.lowStockProducts.length === 0 ? (
+          {(kpis.lowStockProducts ?? []).length === 0 ? (
             <div className="px-5 py-8 text-center text-sm text-zinc-600">
               Todos os produtos estão com estoque adequado.
             </div>
@@ -178,7 +178,7 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-white">Últimas vendas</h2>
         </div>
 
-        {kpis.recentSales.length === 0 ? (
+        {(kpis.recentSales ?? []).length === 0 ? (
           <div className="px-5 py-8 text-center text-sm text-zinc-600">
             Nenhuma venda registrada ainda.
           </div>
