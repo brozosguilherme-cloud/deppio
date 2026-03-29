@@ -6,7 +6,7 @@ interface KPICardProps {
   value: string | number;
   subtitle?: string;
   icon: LucideIcon;
-  color?: "green" | "blue" | "yellow" | "purple";
+  color?: "green" | "blue" | "yellow" | "purple" | "red";
   trend?: { value: number; label: string };
 }
 
@@ -15,6 +15,7 @@ const colorMap = {
   blue:   { icon: "text-sky-400",      glow: "shadow-sky-500/5"      },
   yellow: { icon: "text-primary-400",  glow: "shadow-primary-500/5"  },
   purple: { icon: "text-violet-400",   glow: "shadow-violet-500/5"   },
+  red:    { icon: "text-red-400",      glow: "shadow-red-500/5"      },
 };
 
 export function KPICard({

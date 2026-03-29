@@ -4,8 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import {
   DollarSign,
   TrendingUp,
+  TrendingDown,
   ShoppingCart,
   BarChart3,
+  Wallet,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -132,20 +134,31 @@ export default function FaturamentoPage() {
       {data && (
         <>
           {/* KPIs */}
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
             <KPICard
               title="Receita total"
               value={formatCurrency(data.totalRevenue)}
               icon={DollarSign}
               color="green"
+              subtitle={`${data.totalSales} venda(s)`}
             />
             <KPICard
-              title="Margem bruta"
-              value={`${data.grossMarginPct.toFixed(1)}%`}
-              icon={TrendingUp}
-              color="blue"
-              subtitle={formatCurrency(data.grossMargin)}
+              title="Custo total"
+              value={formatCurrency(data.totalCost)}
+              icon={TrendingDown}
+              color="red"
+              subtitle="Custo dos produtos vendidos"
             />
+            <KPICard
+              title="Lucro líquido"
+              value={formatCurrency(data.grossMargin)}
+              icon={Wallet}
+              color="yellow"
+              subtitle={`Margem: ${data.grossMarginPct.toFixed(1)}%`}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
             <KPICard
               title="Total de vendas"
               value={data.totalSales}
@@ -156,7 +169,14 @@ export default function FaturamentoPage() {
               title="Ticket médio"
               value={formatCurrency(data.avgTicket)}
               icon={BarChart3}
-              color="yellow"
+              color="blue"
+            />
+            <KPICard
+              title="Margem de lucro"
+              value={`${data.grossMarginPct.toFixed(1)}%`}
+              icon={TrendingUp}
+              color="green"
+              subtitle="Receita vs Custo"
             />
           </div>
 
