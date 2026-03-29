@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Package, Monitor, Truck, FlaskConical,
-  ArrowRight, Check, Zap, ChevronRight, Star, BarChart3,
+  ArrowRight, Check, Zap, ChevronRight, BarChart3,
   ShieldCheck, Smartphone, Crown, Menu, X
 } from "lucide-react";
 import { useState } from "react";
@@ -155,16 +155,23 @@ function Hero() {
   );
 }
 
-// ─── Clientes / Social proof ───────────────────────────────────────────────────
+// ─── Métricas / Social proof ──────────────────────────────────────────────────
 
 function SocialProof() {
   return (
     <section className="py-10 border-y border-white/5 bg-white/[0.02]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <p className="text-sm text-zinc-500 mb-6">Empresas que já confiam no Deppio</p>
-        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 opacity-40">
-          {["Moda & Cia", "Tech Parts", "Casa Bella", "Sport Zone", "Artes & Cor"].map((name) => (
-            <span key={name} className="text-zinc-300 font-bold text-sm sm:text-base tracking-wide">{name}</span>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
+          {[
+            { value: "100%", label: "Online e seguro" },
+            { value: "0", label: "Instalação necessária" },
+            { value: "< 2min", label: "Para começar a usar" },
+            { value: "24/7", label: "Acesso ao sistema" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="text-xl sm:text-2xl font-black text-yellow-400">{stat.value}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">{stat.label}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -423,51 +430,47 @@ function Pricing() {
   );
 }
 
-// ─── Depoimentos ───────────────────────────────────────────────────────────────
+// ─── Por que Deppio ────────────────────────────────────────────────────────────
 
-const TESTIMONIALS = [
+const REASONS = [
   {
-    name: "Carla Mendes",
-    role: "Proprietária · Moda & Cia",
-    text: "Antes eu usava planilha e sempre perdia o controle. Com o Deppio, sei exatamente o que tenho em estoque a qualquer momento.",
-    stars: 5,
+    title: "Chega de planilhas",
+    text: "Substitua controles manuais por um sistema profissional que atualiza o estoque automaticamente a cada venda.",
+    icon: Package,
   },
   {
-    name: "Roberto Andrade",
-    role: "Gerente · Tech Parts",
-    text: "O PDV é incrível — rapidinho e já integra com o estoque. Economizamos horas toda semana.",
-    stars: 5,
+    title: "Venda direto do navegador",
+    text: "PDV integrado que funciona em qualquer dispositivo. Sem hardware extra, sem instalação, sem complicação.",
+    icon: Monitor,
   },
   {
-    name: "Fernanda Lima",
-    role: "Fundadora · Artes & Cor",
-    text: "O sistema de matérias-primas do plano Pro mudou meu negócio. Agora sei exatamente o custo de cada produto que fabrico.",
-    stars: 5,
+    title: "Saiba o que dá lucro",
+    text: "Relatórios de lucratividade por produto e categoria para você tomar decisões baseadas em dados reais.",
+    icon: BarChart3,
   },
 ];
 
-function Testimonials() {
+function WhyDeppio() {
   return (
     <section className="py-24 px-4 sm:px-6 bg-white/[0.02] border-y border-white/5">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-white mb-3">O que nossos clientes dizem</h2>
+          <h2 className="text-3xl font-black text-white mb-3">Por que escolher o Deppio?</h2>
+          <p className="text-zinc-400 text-lg">Feito para quem precisa de resultado, não de complexidade.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
-              <div className="flex gap-0.5 mb-4">
-                {[...Array(t.stars)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                ))}
+          {REASONS.map((r) => {
+            const Icon = r.icon;
+            return (
+              <div key={r.title} className="bg-zinc-900 border border-white/5 rounded-2xl p-6 text-center">
+                <div className="w-12 h-12 bg-yellow-400/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Icon className="w-6 h-6 text-yellow-400" />
+                </div>
+                <h3 className="text-white font-bold text-base mb-2">{r.title}</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed">{r.text}</p>
               </div>
-              <p className="text-zinc-300 text-sm leading-relaxed mb-4">&quot;{t.text}&quot;</p>
-              <div>
-                <p className="text-white font-semibold text-sm">{t.name}</p>
-                <p className="text-zinc-500 text-xs">{t.role}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -486,7 +489,7 @@ function FinalCTA() {
             Pronto para ter controle real do seu negócio?
           </h2>
           <p className="text-zinc-400 text-lg mb-8">
-            Junte-se a centenas de empresas que já organizam seu estoque com o Deppio.
+            Comece a organizar seu estoque hoje mesmo. Sem instalação, sem burocracia.
           </p>
           <button
             onClick={() => router.push("/cadastro")}
@@ -529,9 +532,26 @@ function Footer() {
 
 // ─── Página principal ──────────────────────────────────────────────────────────
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Deppio",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  description: "Gestão inteligente de estoque para pequenas e médias empresas brasileiras.",
+  offers: [
+    { "@type": "Offer", name: "Essencial", price: "49.00", priceCurrency: "BRL", billingPeriod: "P1M" },
+    { "@type": "Offer", name: "Pro", price: "99.00", priceCurrency: "BRL", billingPeriod: "P1M" },
+  ],
+};
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <main>
         <Hero />
@@ -539,7 +559,7 @@ export default function LandingPage() {
         <Features />
         <HowItWorks />
         <Pricing />
-        <Testimonials />
+        <WhyDeppio />
         <FinalCTA />
       </main>
       <Footer />

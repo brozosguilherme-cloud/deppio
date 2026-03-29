@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: "Deppio — Gestão inteligente de estoque",
     description: "Controle produtos, vendas, PDV e muito mais. Plataforma completa para PMEs brasileiras.",
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://inventory-saas-beta.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://deppio.com.br"),
 };
 
 export default function RootLayout({

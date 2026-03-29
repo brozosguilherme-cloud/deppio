@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://inventory-saas-beta.vercel.app";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://deppio.com.br";
   const secretKey = (process.env.STRIPE_SECRET_KEY || "").trim();
 
   if (!secretKey) {

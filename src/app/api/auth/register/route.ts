@@ -16,7 +16,7 @@ async function createCheckoutSession(email: string, organizationId: string, plan
   const priceId = STRIPE_PRICES[plan];
   if (!priceId) throw new Error(`Price ID não encontrado para plano: ${plan}. STRIPE_PRICES=${JSON.stringify(STRIPE_PRICES)}`);
 
-  const appUrl = "https://inventory-saas-beta.vercel.app";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://deppio.com.br";
   const secretKey = (process.env.STRIPE_SECRET_KEY || "").trim();
 
   if (!secretKey) throw new Error("STRIPE_SECRET_KEY não configurada");
